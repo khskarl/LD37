@@ -25,6 +25,7 @@ public enum State
 
 public class Actor : MonoBehaviour {
 	/*  */
+	public string name = "UNDEFINED";
 	TeamColor teamColor = TeamColor.NONE; // Eu: Not being used at the moment
 
 	public State state = State.Idle;
