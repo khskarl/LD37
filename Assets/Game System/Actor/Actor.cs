@@ -25,6 +25,7 @@ public enum State
 
 public class Actor : MonoBehaviour {
 	/*  */
+	public int id;
 	public string name = "UNDEFINED";
 	TeamColor teamColor = TeamColor.NONE; // Eu: Not being used at the moment
 
@@ -136,22 +137,17 @@ public class Actor : MonoBehaviour {
 
 	void Charge()
 	{
-
 		anim.Play("chicken_charge");
-
-		//float speed = input.walkDirection.SqrMagnitude();
-		//if (speed <= 0.01f)
-		{
-			movement.SetLookDirection(input.walkDirection);
-		}
-
+			
+		movement.SetLookDirection(input.walkDirection);
+		
 		if (input.attackUp || input.attack == false)
 		{
 			float timeCharged = Mathf.Clamp(input.TimeSinceAttackDown(), 0, 2);
 			float timeChargedNormalized = timeCharged / 2;
 			float force = Mathf.Lerp(5, 20, timeChargedNormalized);
 
-			Debug.Log(timeCharged);
+			//Debug.Log(timeCharged);
 			movement.Tackle(force);
 			state = State.Attack;
 		}

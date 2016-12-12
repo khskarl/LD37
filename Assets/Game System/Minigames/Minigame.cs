@@ -5,10 +5,11 @@ using UnityEngine;
 public class Minigame : MonoBehaviour {
 
 	public string name = "UNDEFINED";
-	float duration = 10f;
+	public string objective = "UNDEFINED";
 
+	float duration = 13.5f;
 	float level = 1;
-
+	
 	virtual public void Begin()
 	{
 
@@ -19,4 +20,20 @@ public class Minigame : MonoBehaviour {
 
 	}
 	
+	virtual public void HasEnded()
+	{
+
+	}
+
+	virtual public void GiveLife(Actor target)
+	{
+
+	}
+
+
+	virtual public void TakeLife(Actor target)
+	{
+
+	}
+
 }
