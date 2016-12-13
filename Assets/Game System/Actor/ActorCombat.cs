@@ -9,6 +9,8 @@ public class ActorCombat : MonoBehaviour {
 	Actor _actor;
 	ActorMovement _movement;
 
+	public Transform hitEffectPrefab;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -18,8 +20,18 @@ public class ActorCombat : MonoBehaviour {
 		
 	void HandleTackle(Actor source, Actor target)
 	{
+		Vector3 posMedian = (source.transform.position + target.transform.position) / 2f;
+		Quaternion direction = Quaternion.identity;
+		if (source.movement._launchVelocity != Vector3.zero)
+		{
+			direction = Quaternion.LookRotation(source.movement._launchVelocity);
+		}
 		if (source.state == State.Attack && target.state != State.Attack)
 		{
+			// TODO: Change sound accordingly to the velocity
+			_actor.hitSound.Play();
+			InstantiateHitEffect(posMedian, direction);
+
 			Vector3 sourceVelocity = source.movement._launchVelocity;
 			target.combat.ReceiveTackle(source, sourceVelocity * 2f);
 
@@ -28,6 +40,9 @@ public class ActorCombat : MonoBehaviour {
 		}
 		else if (source.state == State.Attack && target.state == State.Attack)
 		{
+			// TODO: Change sound accordingly to the velocity
+			_actor.hitSound.Play();
+			InstantiateHitEffect(posMedian, direction);
 			Vector3 sourceVelocity = source.movement._launchVelocity;
 			//Vector3 targetVelocity = target.movement._launchVelocity;
 			Vector3 pushbackVelocity = sourceVelocity * -0.5f;
@@ -39,6 +54,11 @@ public class ActorCombat : MonoBehaviour {
 	{
 		_actor.EnterHurt();
 		_movement.Launch(force);
+	}
+	
+	void InstantiateHitEffect(Vector3 hitPos, Quaternion direction)
+	{
+		GameObject.Instantiate(hitEffectPrefab, hitPos, direction);
 	}
 
 	void OnControllerColliderHit(ControllerColliderHit hit)

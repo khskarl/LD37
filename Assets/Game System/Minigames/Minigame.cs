@@ -2,28 +2,36 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Minigame : MonoBehaviour {
+public abstract class Minigame : MonoBehaviour {
 
 	public string name = "UNDEFINED";
 	public string objective = "UNDEFINED";
 
-	float duration = 13.5f;
-	float level = 1;
-	
-	virtual public void Begin()
+	//float duration = 15f;
+	public int level = 1;
+
+	abstract public void Begin();
+
+	abstract public void End();
+
+	abstract public bool HasEnded();
+
+
+	virtual public void Loop()
 	{
 
 	}
 
-	virtual public void End()
+	public void SetLevel(int l)
 	{
-
+		level = l;
 	}
-	
-	virtual public void HasEnded()
+
+	public int GetLevel()
 	{
-
+		return level;
 	}
+
 
 	virtual public void GiveLife(Actor target)
 	{

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -50,9 +49,17 @@ public class RoomManager : MonoBehaviour
 		CreatePlatforms();
 		
 		// Create walls
-		CreateWallsFloor(0);
-		CreateWallsFloor(-4);
-		CreateWallsFloor(-8);
+		//CreateWallsFloor(0);
+		//CreateWallsFloor(-4);
+		//CreateWallsFloor(-8);
+	}
+
+	public Platform GetRandomPlatform()
+	{
+		int w = Random.Range(0, width - 1);
+		int d = Random.Range(0, depth - 1);
+
+		return platforms[d, w];
 	}
 
 	void CreatePlatforms()
@@ -99,7 +106,13 @@ public class RoomManager : MonoBehaviour
 		}
 	}
 
-
+	public void RecoverAll()
+	{
+		foreach (Platform platform in platforms)
+		{
+			platform.EnterRecover();
+		}
+	}
 
 	public void OuterFall(int radius)
 	{

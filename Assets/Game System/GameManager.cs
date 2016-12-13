@@ -7,6 +7,7 @@ using UnityEngine.UI;
 
 public enum MatchState
 {
+	Lobby,
 	StartMatch,
 	StartMinigame,
 	Minigame,
@@ -33,10 +34,11 @@ public class GameManager : MonoBehaviour {
 	MatchSettings settings = new MatchSettings(4, 5);
 
 	/* Match variables */
-	Actor[] players;
-	int[] lives;
+	Actor[] players = new Actor[0];
+	int[] numLives = new int[0];
+	Queue<int> deadList = new Queue<int>();
 
-	int numPlayersAlive;
+	int numPlayersAliveMatch;
 	bool isMatchOver = false;
 
 
@@ -52,13 +54,25 @@ public class GameManager : MonoBehaviour {
 	public int minigameIndex = 0;
 	public Minigame currMinigame;
 	public Minigame[] minigames;
+	bool allowRespawn = false;
+	public int level = 1;
+	public int numPlayersAlive;
+
 
 	/* References */
 	public Actor actorPrefab;
 
+	public AudioSource music;
+	public AudioSource shortCountdownSound;
+	public AudioSource longCountdownSound;
+	public AudioSource victoryTheme;
+
+	public Transform titleScreen;
+
 	/* */
-	Text stateGUIText;
+	TextCopy stateGUIText;
 	Text debugGUIText;
+	Text levelGUIText;
 	//Awake is always called before any Start functions
 	void Awake()
 	{
@@ -69,35 +83,92 @@ public class GameManager : MonoBehaviour {
 			Destroy(gameObject);
 		
 		DontDestroyOnLoad(gameObject);
-				
+
+		debugGUIText = GameObject.Find("DebugGameText").GetComponent<Text>();
+		stateGUIText = GameObject.Find("StateText").GetComponent<TextCopy>();
+		levelGUIText = GameObject.Find("LevelText").GetComponent<Text>();
+
+		stateAction.Add(MatchState.Lobby, this.StateLobby);
 		stateAction.Add(MatchState.StartMatch,    this.StartMatchState);
 		stateAction.Add(MatchState.StartMinigame, this.StartMinigameState);
 		stateAction.Add(MatchState.Minigame,      this.MinigameState);
 		stateAction.Add(MatchState.EndMinigame,   this.EndMinigameState);
 		stateAction.Add(MatchState.EndMatch,      this.EndMatchState);
 		
-		debugGUIText = GameObject.Find("DebugGameText").GetComponent<Text>();
-		stateGUIText = GameObject.Find("StateText").GetComponent<Text>();
 
 	}
 
 	void Start()
 	{
-		EnterStartMinigame();
-		BeginMatch();
+		state = MatchState.Lobby;
+		//BeginMatch();
 	}
 
 	void FixedUpdate()
 	{
-		DebugPlayersLives();
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			state = MatchState.Lobby;
+			titleScreen.gameObject.SetActive(true);
+		}
+
+		if (state != MatchState.Lobby)
+		{
+			//DebugPlayersLives();
+		}
 
 		if (stateAction.ContainsKey(state))
 			stateAction[state]();
 	}
 
-	void BeginMatch()
+	public int GetMatchNumLives()
 	{
+		return settings.numLives;
+	}
+
+	public int GetMatchNumPlayers()
+	{
+		return settings.numPlayers;
+	}
+
+	public void IncreaseMatchNumLives()
+	{
+		settings.numLives += 1;
+		GameObject.Find("lblNumLives").GetComponent<Text>().text = GetMatchNumLives().ToString();
+	}
+
+	public void DecreaseMatchNumLives()
+	{
+		if (settings.numLives > 1)
+			settings.numLives -= 1;
+
+		GameObject.Find("lblNumLives").GetComponent<Text>().text = GetMatchNumLives().ToString();
+	}
+
+	public void IncreaseMatchNumPlayers()
+	{
+		settings.numPlayers += 1;
+
+		GameObject.Find("lblNumPlayers").GetComponent<Text>().text = GetMatchNumPlayers().ToString();
+	}
+
+	public void DecreaseMatchNumPlayers()
+	{
+		if (settings.numPlayers > 1)
+			settings.numPlayers -= 1;
+
+		GameObject.Find("lblNumPlayers").GetComponent<Text>().text = GetMatchNumPlayers().ToString();
+	}
+
+	public void BeginMatch()
+	{
+		titleScreen.gameObject.SetActive(false);
 		SetupPlayers();
+		numPlayersAlive = numPlayersAliveMatch;
+		level = 1;
+		SetLevelText(level.ToString());
+		RoomManager.instance.RecoverAll();
+		EnterStartMatch();
 	}
 
 	void EndMatch()
@@ -106,79 +177,121 @@ public class GameManager : MonoBehaviour {
 	}
 
 	/* State machine */
+	void EnterLobby()
+	{
+
+	}
+	void StateLobby()
+	{
+	}
+
 	void EnterStartMatch()
 	{
+		
+		numPlayersAlive = numPlayersAliveMatch;
+
 		timeEnteredState = Time.time;
 		state = MatchState.StartMatch;
+		PlayLongCountdown();
 	}
 	void StartMatchState()
 	{
-		int timeToStartMatch = Mathf.CeilToInt(5 - (Time.time - timeEnteredState)); 
+		int timeToStartMatch = Mathf.CeilToInt(4 - (Time.time - timeEnteredState));
 		SetStateText("Starting match in " + timeToStartMatch);
 
+		currMinigame = minigames[minigameIndex].GetComponent<Minigame>();
+
 		if (timeToStartMatch == 0)
+		{
 			EnterStartMinigame();
+			PlayMusic();
+		}
 	}
 
 	void EnterStartMinigame()
 	{
-		currMinigame = minigames[minigameIndex].GetComponent<Minigame>();
 		timeEnteredState = Time.time;
 		state = MatchState.StartMinigame;
+		PlayShortCountdown();
 	}
 	void StartMinigameState()
 	{
-		int timeLeft = Mathf.CeilToInt(2 - (Time.time - timeEnteredState));
-		SetStateText("Starting minigame " + currMinigame.name + " in " + timeLeft);
-
+		int timeLeft = Mathf.CeilToInt(2 - GetTimeInState());
+		//SetStateText(currMinigame.name + '\n' + currMinigame.objective);
+		SetStateText("");
 		if (timeLeft == 0)
 			EnterMinigame();
 	}
 
 	void EnterMinigame()
 	{
+		currMinigame.SetLevel(level);
 		currMinigame.Begin();
 		timeEnteredState = Time.time;
 		state = MatchState.Minigame;
 	}
 	void MinigameState()
 	{
-		int timeLeft = Mathf.CeilToInt(13.5f - (Time.time - timeEnteredState));
-		SetStateText("Minigame! " + currMinigame.name + ": " + timeLeft);
+		int timeLeft = Mathf.CeilToInt(15f - GetTimeInState());
+		SetStateText(currMinigame.name + '\n' + currMinigame.objective + '\n' + timeLeft);
 
-		if (timeLeft == 0)
+		currMinigame.Loop();
+
+		if (allowRespawn)
+		{
+			RespawnDeadList();
+		}
+		if (timeLeft == 0 || currMinigame.HasEnded())
 			EnterEndMinigame();
 	}
 
 	void EnterEndMinigame()
 	{
 		currMinigame.End();
+		state = MatchState.EndMinigame;
+
+		if (numPlayersAliveMatch <= 1 && settings.numPlayers > 1 || numPlayersAliveMatch == 0 && settings.numPlayers == 1)
+		{
+			EnterEndMatch();
+		}
+
+		RespawnDeadList();
 		minigameIndex += 1;
 		minigameIndex = minigameIndex % minigames.Length;
+		if (minigameIndex == 0)
+		{
+			level += 1;
+			SetLevelText(level.ToString());
+		}
+		currMinigame = minigames[minigameIndex].GetComponent<Minigame>();
+		numPlayersAlive = numPlayersAliveMatch;
 
 		timeEnteredState = Time.time;
-		state = MatchState.EndMinigame;
 	}
 	void EndMinigameState()
 	{
 		int timeLeft = Mathf.CeilToInt(2f - (Time.time - timeEnteredState));
 		SetStateText("Ending minigame");
 
-		if (numPlayersAlive <= 1)
-		{
-			EnterEndMatch();
-		}
-		else if (timeLeft == 0)
+		if (timeLeft == 0)
 		{
 			EnterStartMinigame();
 		}
+	}
+
+	public int GetLevel()
+	{
+		return level;
 	}
 
 	void EnterEndMatch()
 	{
 		timeEnteredState = Time.time;
 		state = MatchState.EndMatch;
+		StopMusic();
+		PlayVictoryTheme();
 	}
+
 	void EndMatchState()
 	{
 		Actor winner = GetWinner();
@@ -188,19 +301,57 @@ public class GameManager : MonoBehaviour {
 
 	/* Utils */
 
-	void NextMinigame()
+	public void PlayLongCountdown()
 	{
-
+		longCountdownSound.Play();
 	}
+
+	public void PlayVictoryTheme()
+	{
+		victoryTheme.Play();
+	}
+
+	public void PlayShortCountdown()
+	{
+		shortCountdownSound.Play();
+	}
+
+	public void PlayMusic()
+	{
+		music.Play();
+	}
+
+	public void StopMusic()
+	{
+		music.Stop();
+	}
+
+	public void Delete(List<GameObject> gos)
+	{
+		foreach (GameObject go in gos)
+		{
+			GameObject.Destroy(go);
+		}
+	} 
+		
 
 	void SetupPlayers()
 	{
+		if (players.Length != 0)
+		{
+			foreach (Actor player in players)
+			{
+				Kill(player);
+			}
+		}
+		deadList.Clear();
+
 		players = new Actor[settings.numPlayers];
-		lives = new int[settings.numPlayers];
+		numLives = new int[settings.numPlayers];
 
 		for (int i = 0; i < settings.numPlayers; i++)
 		{
-			Actor actor = Instantiate(actorPrefab, new Vector3(i * 2 - 4, 10, 0), Quaternion.identity) as Actor;
+			Actor actor = Instantiate(actorPrefab, new Vector3((i % 4)* 2 - 4, 10 * (int)(i / 4 + 1), 0), Quaternion.identity) as Actor;
 			actor.id = i;
 			actor.input._playerID = (TeamUtility.IO.PlayerID)i;
 			actor.name = "Player " + (i + 1);
@@ -214,40 +365,51 @@ public class GameManager : MonoBehaviour {
 	void ResetLives()
 	{
 		for (int i = 0; i < settings.numPlayers; i++)
-			lives[i] = settings.numLives;
+			numLives[i] = settings.numLives;
 
-		numPlayersAlive = settings.numPlayers;
+		numPlayersAliveMatch = settings.numPlayers;
 	}
 			
 	public void Kill(Actor target)
 	{
+		target.PlayDeathSound();
 		RemoveLife(target);
-
-		if (lives[target.id] > 0)
-			Respawn(target);
+		target.transform.position = new Vector3(1000, 1000, 1000); // Send them to hell
+		deadList.Enqueue(target.id);
+		numPlayersAlive -= 1;
 
 	}
 
 	public void RemoveLife(Actor target)
 	{
-		if (lives[target.id] <= 0)
+		if (numLives[target.id] <= 0)
 			return;
 
-		lives[target.id] -= 1;
+		numLives[target.id] -= 1;
 
-		if (lives[target.id] <= 0)
-			numPlayersAlive -= 1;
+		if (numLives[target.id] <= 0)
+			numPlayersAliveMatch -= 1;
+		
+	}
 
-		Debug.Log(numPlayersAlive + " players left!");
-
-		if (numPlayersAlive == 1)
-			EnterEndMatch();
+	public void RespawnDeadList()
+	{
+		int[] deadIDs = deadList.ToArray();
+		foreach (int id in deadIDs)
+		{
+			if (GetNumLives(id) <= 0)
+				continue;
+			
+			players[id].transform.position = new Vector3(id, 10, -6);
+			players[id].movement.Stop();
+		}
+		deadList.Clear();
 	}
 
 	public void Respawn(Actor target)
 	{
 		target.movement.Stop();
-		target.transform.position = new Vector3(0, 10, 0);
+		target.transform.position = new Vector3(0 , 10, 0);
 	}
 
 	Actor GetWinner()
@@ -256,13 +418,27 @@ public class GameManager : MonoBehaviour {
 		
 		for (int i = 0; i < settings.numPlayers; i++)
 		{
-			if (lives[i] > 0)
+			if (numLives[i] > 0)
 			{
 				winner = players[i];
 			}
 		}
 
 		return winner;
+	}
+
+	public int GetNumLives(int id)
+	{
+		if (numLives.Length <= id || id < 0)
+		{
+			return -1;
+		}
+		return numLives[id];
+	}
+
+	public float GetTimeInState()
+	{
+		return Time.time - timeEnteredState;
 	}
 
 	/* Debug Stuff */
@@ -273,17 +449,24 @@ public class GameManager : MonoBehaviour {
 
 	private void SetStateText(string text)
 	{
-		stateGUIText.text = text;
+		//stateGUIText.text = text;
+		stateGUIText.SetText(text);
+	}
+
+	private void SetLevelText(string text)
+	{
+		levelGUIText.text = "Level " + text;
 	}
 
 	private void DebugPlayersLives()
 	{
 		string debugText = "";
-		debugText += "Alive: " + numPlayersAlive + '\n';
+		debugText += "Match Alive: " + numPlayersAliveMatch + '\n';
+		debugText += "Minigame Alive: " + numPlayersAlive + '\n';
 
 		for (int i = 0; i < settings.numPlayers; i++)
 		{
-			debugText += "P" + (i + 1) + ": " + lives[i] + '\n';
+			debugText += "P" + (i + 1) + ": " + numLives[i] + '\n';
 		}
 
 		SetDebugText(debugText);

@@ -30,8 +30,8 @@ public class ActorInput : MonoBehaviour {
 	void Update()
 	{
 		// Eu: The input is inverted because I'm stupid
-		float h = -Input.GetAxisRaw("Horizontal", _playerID);
-		float v = -Input.GetAxisRaw("Vertical", _playerID);
+		float h = -Input.GetAxisRaw("Horizontal", GetPlayerID());
+		float v = -Input.GetAxisRaw("Vertical", GetPlayerID());
 
 		Vector2 walkDir = new Vector2(h, v);
 
@@ -42,17 +42,17 @@ public class ActorInput : MonoBehaviour {
 		else
 			this.walkDirection = new Vector2(0, 0);
 
-		this.jump = Input.GetButton("Jump", _playerID);
+		this.jump = Input.GetButton("Jump", GetPlayerID());
 
-		//this.run = Input.GetButton("Run", _playerID);
+		//this.run = Input.GetButton("Run", GetPlayerID());
 
-		if (this.attack == false && Input.GetButton("Attack", _playerID) == true)
+		if (this.attack == false && Input.GetButton("Attack", GetPlayerID()) == true)
 		{
 			timeAttackDown = Time.time;
 			this.attackDown = true;
 			this.attackUp   = false;
 		}
-		else if (this.attack == true && Input.GetButton("Attack", _playerID) == false)
+		else if (this.attack == true && Input.GetButton("Attack", GetPlayerID()) == false)
 		{
 			this.attackUp   = true;
 			this.attackDown = false;
@@ -63,7 +63,12 @@ public class ActorInput : MonoBehaviour {
 			this.attackDown = false;
 		}
 
-		this.attack = Input.GetButton("Attack", _playerID);
+		this.attack = Input.GetButton("Attack", GetPlayerID());
+	}
+
+	TeamUtility.IO.PlayerID GetPlayerID()
+	{
+		return (TeamUtility.IO.PlayerID)((int)_playerID % 4);
 	}
 
 	public float TimeSinceAttackDown()

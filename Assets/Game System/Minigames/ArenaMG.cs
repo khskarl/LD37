@@ -20,6 +20,11 @@ public class ArenaMG : Minigame {
 		RoomManager.instance.OuterRecover(1);
 	}
 
+	override public bool HasEnded()
+	{
+		return GameManager.instance.numPlayersAlive <= 1;
+	}
+
 	// Use this for initialization
 	void Start () {
 		

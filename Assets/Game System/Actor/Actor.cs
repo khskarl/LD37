@@ -40,39 +40,63 @@ public class Actor : MonoBehaviour {
 	public ActorCombat		combat;
 
 	Animation anim;
-	
+
+
+	public AudioSource hurtSound;
+	public AudioSource hitSound;
+	public AudioSource deathSound;
+
 	/* Debug Stuff */
 	TextMesh debugTextMesh;
-	
+	TextMesh lifeCounterTextMesh;
+
 	void Awake () {
 		movement =	GetComponent<ActorMovement>();
 		input =		GetComponent<ActorInput>();
 		combat =	GetComponent<ActorCombat>();
 
 		anim = GetComponent<Animation>();
-		debugTextMesh = GetComponentInChildren<TextMesh>();
+
+		TextMesh[] textMeshes = GetComponentsInChildren<TextMesh>();
+		foreach (TextMesh textMesh in textMeshes)
+		{
+			if (textMesh.transform.name == "DebugText")
+				debugTextMesh = textMesh;
+
+			if (textMesh.transform.name == "LifeCounter")
+				lifeCounterTextMesh = textMesh;
+		}
+
 	}
 
 	void Start ()
 	{
 		/* */
 		stateAction.Add(State.Idle,   this.Idle);
-		stateAction.Add(State.Walk,   this.Walk);
-		stateAction.Add(State.Charge, this.Charge);
-		stateAction.Add(State.Attack, this.Attack);
-		stateAction.Add(State.Jump,   this.Jump);
-		stateAction.Add(State.Hurt,   this.Hurt);
+		stateAction.Add(State.Walk,   this.StateWalk);
+		stateAction.Add(State.Charge, this.StateCharge);
+		stateAction.Add(State.Attack, this.StateAttack);
+		stateAction.Add(State.Jump,   this.StateJump);
+		stateAction.Add(State.Hurt,   this.StateHurt);
 	}
 	
 	// Update is called once per frame
 	void Update () {
 
 		StateMachineLoop();
+		UpdateLifeCounter();
 
 		if (debugTextMesh)
 			DebugState();
 		
 	}
+
+	public void PlayDeathSound()
+	{
+		deathSound.Play();
+	}
+
+	/* State Machine Stuff */
 
 	void StateMachineLoop()
 	{
@@ -105,7 +129,7 @@ public class Actor : MonoBehaviour {
 		}
 	}
 
-	void Walk()
+	void StateWalk()
 	{
 		anim.Play("chicken_walk");
 
@@ -135,7 +159,7 @@ public class Actor : MonoBehaviour {
 		state = State.Charge;
 	}
 
-	void Charge()
+	void StateCharge()
 	{
 		anim.Play("chicken_charge");
 			
@@ -153,7 +177,7 @@ public class Actor : MonoBehaviour {
 		}
 	}
 
-	void Attack()
+	void StateAttack()
 	{
 		if (movement._isGrounded == true /* or when actor hits another actor */ )
 		{
@@ -168,32 +192,47 @@ public class Actor : MonoBehaviour {
 		state = State.Jump;
 	}
 
-	void Jump()
+	void StateJump()
 	{
 		movement.Walk(input.walkDirection, false);
 		if (movement._isGrounded == true)
 		{
 			state = State.Idle;
 		}
+
+		if (input.attack && input.TimeSinceAttackDown() > 0.1f)
+		{
+			EnterCharge();
+		}
 	}
 
 	public void EnterHurt()
 	{
+		hurtSound.Play();
 		anim.Play("chicken_bounce");
 		anim.Blend("chicken_idle", 1, 0.3f);
 		state = State.Hurt;
 	}
 
-	void Hurt()
+	void StateHurt()
 	{
 		if (anim.IsPlaying("chicken_bounce") == false)
 			state = State.Idle;
 	}
 
-	/* Debug stuff */
+		/* Debug stuff */
 	void DebugState()
 	{
-		debugTextMesh.text = state.ToString();
+		if (debugTextMesh)
+		{
+			debugTextMesh.text = state.ToString();
+		}
+	}
+
+	void UpdateLifeCounter()
+	{
+		lifeCounterTextMesh.text = "x ";
+		lifeCounterTextMesh.text += GameManager.instance.GetNumLives(id).ToString();
 	}
 
 }

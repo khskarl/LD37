@@ -52,6 +52,10 @@ public class Platform : MonoBehaviour {
 		Vector3 currPos = transform.position;
 		float currHeight = currPos.y;
 
+		if (currHeight < -10)
+			return;
+		
+
 		float newHeight = currHeight - 2 * Time.fixedDeltaTime;
 
 		currPos.y = newHeight;
@@ -69,9 +73,9 @@ public class Platform : MonoBehaviour {
 		float currHeight = currPos.y;
 		float targetHeight = 0;
 
-		float t = Mathf.Max(Time.time - timeEnteredState, 2) / 2f;
+		float t = Mathf.Min(Time.time - timeEnteredState, 2) / 2f;
 
-		float newHeight = Mathf.Lerp(currHeight, targetHeight, t * Time.fixedDeltaTime);
+		float newHeight = Mathf.Lerp(currHeight, targetHeight, t);
 
 		currPos.y = newHeight;
 		transform.position = currPos;

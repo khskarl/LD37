@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class VirusMG : Minigame {
 
+
+
 	VirusMG()
 	{
 		name = "Virus";
@@ -19,6 +21,11 @@ public class VirusMG : Minigame {
 	override public void End()
 	{
 
+	}
+
+	override public bool HasEnded()
+	{
+		return false;
 	}
 
 	// Use this for initialization
