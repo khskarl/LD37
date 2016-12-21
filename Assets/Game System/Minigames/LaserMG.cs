@@ -17,7 +17,7 @@ public class LaserMG : Minigame
 
 	override public void Begin()
 	{
-		CreateLaser("laser_horizontal_constant_1", -2);
+		// CreateLaser("laser_horizontal_constant_1", -2);
 	}
 
 	override public void End()
@@ -49,6 +49,9 @@ public class LaserMG : Minigame
 			case 4:
 				LevelFourLoop();
 				break;
+			case 5:
+				LevelFiveLoop();
+				break;
 			default:
 				LevelFourLoop();
 				break;
@@ -79,8 +82,8 @@ public class LaserMG : Minigame
 	{
 		if (Time.time % 4 == 0)
 		{
-			CreateLaser("laser_horizontal_constant_1", 4);
-			CreateLaser("laser_horizontal_constant_1", -4);
+			CreateLaser("laser_horizontal_constant_1", 3);
+			CreateLaser("laser_horizontal_constant_1", -3);
 		}
 	}
 
@@ -88,13 +91,29 @@ public class LaserMG : Minigame
 	{
 		if (Time.time % 6 == 0)
 		{
-			CreateLaser("laser_sine_slow_1", -1);
+			CreateLaser("laser_horizontal_constant_1", -1);
+
+			CreateLaser("laser_horizontal_constant_1", 1);
+		}
+		if ((Time.time + 2) % 4 == 0)
+		{
+			CreateLaser("laser_vertical_constant_1", 1);
+
+			CreateLaser("laser_horizontal_constant_1", -1);
+		}
+	}
+
+	void LevelFiveLoop()
+	{
+		if (Time.time % 6 == 0)
+		{
+			CreateLaser("laser_horizontal_constant_1", -2);
 
 			CreateLaser("laser_horizontal_constant_1", 2);
 		}
 		if ((Time.time + 2) % 4 == 0)
 		{
-			CreateLaser("laser_sine_slow_1", 1);
+			CreateLaser("laser_horizontal_constant_1", 2);
 
 			CreateLaser("laser_horizontal_constant_1", -2);
 		}

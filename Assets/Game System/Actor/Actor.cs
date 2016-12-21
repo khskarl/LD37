@@ -39,7 +39,7 @@ public class Actor : MonoBehaviour {
 	public ActorInput		input;
 	public ActorCombat		combat;
 
-	Animation anim;
+	Animation animation;
 
 
 	public AudioSource hurtSound;
@@ -55,7 +55,7 @@ public class Actor : MonoBehaviour {
 		input =		GetComponent<ActorInput>();
 		combat =	GetComponent<ActorCombat>();
 
-		anim = GetComponent<Animation>();
+		animation = GetComponent<Animation>();
 
 		TextMesh[] textMeshes = GetComponentsInChildren<TextMesh>();
 		foreach (TextMesh textMesh in textMeshes)
@@ -107,7 +107,7 @@ public class Actor : MonoBehaviour {
 	void Idle()
 	{
 
-		anim.Play("chicken_idle");
+		animation.Play("chicken_idle");
 
 		float speed = input.walkDirection.SqrMagnitude();
 		if (speed > 0.01f)
@@ -131,7 +131,7 @@ public class Actor : MonoBehaviour {
 
 	void StateWalk()
 	{
-		anim.Play("chicken_walk");
+		animation.Play("chicken_walk");
 
 		float speed = input.walkDirection.SqrMagnitude();
 		if (speed <= 0.01f)
@@ -161,16 +161,43 @@ public class Actor : MonoBehaviour {
 
 	void StateCharge()
 	{
-		anim.Play("chicken_charge");
-			
+
+		float chargedTime = Mathf.Clamp(input.TimeSinceAttackDown(), 0, 3);
+		float chargedTimeNormalized = chargedTime / 3;
+		float speed = 0.5f;
+		float force = 5;		
+		if (chargedTimeNormalized < 0.25f)
+		{
+			speed = 0.5f;
+			force = Mathf.Lerp(5, 12.5f, chargedTimeNormalized / 0.25f);
+
+		}
+		else if (chargedTimeNormalized < 0.5f) 
+		{
+			speed = 1.5f;
+			force = 12.5f;
+
+		}
+		else if (chargedTimeNormalized < 0.98f)
+		{
+			speed = 4f;
+			force = 20f;
+
+		}
+		else
+		{
+			speed = 10f;
+			force = 30f;
+		}
+		animation["chicken_charge"].speed = speed;
+		animation.Play("chicken_charge");
+
 		movement.SetLookDirection(input.walkDirection);
 		
 		if (input.attackUp || input.attack == false)
 		{
-			float timeCharged = Mathf.Clamp(input.TimeSinceAttackDown(), 0, 2);
-			float timeChargedNormalized = timeCharged / 2;
-			float force = Mathf.Lerp(5, 20, timeChargedNormalized);
 
+			// float force = Mathf.Lerp(5, 20, chargedTimeNormalized);
 			//Debug.Log(timeCharged);
 			movement.Tackle(force);
 			state = State.Attack;
@@ -209,14 +236,14 @@ public class Actor : MonoBehaviour {
 	public void EnterHurt()
 	{
 		hurtSound.Play();
-		anim.Play("chicken_bounce");
-		anim.Blend("chicken_idle", 1, 0.3f);
+		animation.Play("chicken_bounce");
+		animation.Blend("chicken_idle", 1, 0.3f);
 		state = State.Hurt;
 	}
 
 	void StateHurt()
 	{
-		if (anim.IsPlaying("chicken_bounce") == false)
+		if (animation.IsPlaying("chicken_bounce") == false)
 			state = State.Idle;
 	}
 

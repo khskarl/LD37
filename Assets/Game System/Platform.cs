@@ -11,13 +11,18 @@ public enum PlatformState
 	Recover
 }
 
+[SelectionBase]
 public class Platform : MonoBehaviour {
 	public PlatformState state = PlatformState.Idle;
 	Dictionary<PlatformState, Action> stateAction = new Dictionary<PlatformState, Action>();
 
 	float timeEnteredState = 0f;
 
+	Animation animation;
+
 	void Start () {
+		animation = GetComponentInChildren<Animation>();
+
 		SetupMesh();
 		
 		stateAction.Add(PlatformState.Idle, this.StateIdle);
@@ -46,39 +51,41 @@ public class Platform : MonoBehaviour {
 	{
 		timeEnteredState = Time.time;
 		state = PlatformState.Fall;
+		animation.Play("platform_fall");
 	}
 	void StateFall()
 	{
-		Vector3 currPos = transform.position;
-		float currHeight = currPos.y;
+		// Vector3 currPos = transform.position;
+		// float currHeight = currPos.y;
 
-		if (currHeight < -10)
-			return;
+		// if (currHeight < -10)
+		// 	return;
 		
 
-		float newHeight = currHeight - 2 * Time.fixedDeltaTime;
+		// float newHeight = currHeight - 2 * Time.fixedDeltaTime;
 
-		currPos.y = newHeight;
-		transform.position = currPos;
+		// currPos.y = newHeight;
+		// transform.position = currPos;
 	}
 
 	public void EnterRecover()
 	{
 		timeEnteredState = Time.time;
 		state = PlatformState.Recover;
+		animation.Play("platform_recover");
 	}
 	void StateRecover()
 	{
-		Vector3 currPos = transform.position;
-		float currHeight = currPos.y;
-		float targetHeight = 0;
+		// Vector3 currPos = transform.position;
+		// float currHeight = currPos.y;
+		// float targetHeight = 0;
 
-		float t = Mathf.Min(Time.time - timeEnteredState, 2) / 2f;
+		// float t = Mathf.Min(Time.time - timeEnteredState, 2) / 2f;
 
-		float newHeight = Mathf.Lerp(currHeight, targetHeight, t);
+		// float newHeight = Mathf.Lerp(currHeight, targetHeight, t);
 
-		currPos.y = newHeight;
-		transform.position = currPos;
+		// currPos.y = newHeight;
+		// transform.position = currPos;
 	}
 
 	void SetupMesh()
