@@ -159,11 +159,12 @@ public class ActorMovement : MonoBehaviour {
 		if (_isGrounded == false)
 		{
 			friction *= 8;
-		} 
+		}
+		Vector3 vel = Vector3.zero;
 		// Update walking velocity
 		_walkVelocity = Vector3.SmoothDamp(_walkVelocity, 
 										   _targetWalkVelocity, 
-										   ref _walkAcceleration,
+										   ref vel,
 										   friction,
 										   150,
 										   _dt);
