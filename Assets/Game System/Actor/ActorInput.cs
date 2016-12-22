@@ -1,18 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
+
 using Input = TeamUtility.IO.InputManager;
 
 [RequireComponent(typeof(ActorInput))]
 [RequireComponent(typeof(Actor))]
-public class ActorInput : MonoBehaviour {
+public class ActorInput : NetworkBehaviour {
 
+
+	[SyncVar]
 	public Vector2 walkDirection = Vector2.zero;
 
+	[SyncVar]
 	public bool jump = false;
+	[SyncVar]
 	public bool run = false;
+	[SyncVar]
 	public bool attack = false;
+	[SyncVar]
 	public bool attackDown = false;
+	[SyncVar]
 	public bool attackUp = false;
+	[SyncVar]
 	public float timeAttackDown = 0;
 
 	// Defines the player input configuration ID this ActorControlPlayer uses
@@ -23,13 +33,15 @@ public class ActorInput : MonoBehaviour {
 	void Start()
 	{
 		//_playerID = (TeamUtility.IO.PlayerID)(numPlayers % 4);
-		//numPlayers += 1;		
+		//numPlayers += 1;
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		// Eu: The input is inverted because I'm stupid
+		if (isLocalPlayer == false)
+			return;
+
 		float h = -Input.GetAxisRaw("Horizontal", GetPlayerID());
 		float v = -Input.GetAxisRaw("Vertical", GetPlayerID());
 

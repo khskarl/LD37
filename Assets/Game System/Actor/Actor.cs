@@ -2,6 +2,7 @@
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using UnityEngine.Networking;
 
 // In case we need/want a team and friendly fire system
 enum TeamColor
@@ -23,12 +24,15 @@ public enum State
 	Hurt
 }
 
-public class Actor : MonoBehaviour {
+public class Actor : NetworkBehaviour
+{
 	/*  */
 	public int id;
 	public string name = "UNDEFINED";
 	TeamColor teamColor = TeamColor.NONE; // Eu: Not being used at the moment
 
+
+	[SyncVar]
 	public State state = State.Idle;
 
 	/*  */
