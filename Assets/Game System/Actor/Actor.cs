@@ -46,6 +46,8 @@ public class Actor : MonoBehaviour {
 	public AudioSource hitSound;
 	public AudioSource deathSound;
 
+	public ParticleSystem walkPS;
+
 	/* Debug Stuff */
 	TextMesh debugTextMesh;
 	TextMesh lifeCounterTextMesh;
@@ -71,6 +73,9 @@ public class Actor : MonoBehaviour {
 
 	void Start ()
 	{
+		var em = walkPS.emission;
+		em.enabled = false;
+
 		/* */
 		stateAction.Add(State.Idle,   this.Idle);
 		stateAction.Add(State.Walk,   this.StateWalk);
@@ -106,6 +111,7 @@ public class Actor : MonoBehaviour {
 
 	void Idle()
 	{
+		StopWalkPS();
 
 		animation.Play("chicken_idle");
 
@@ -125,12 +131,13 @@ public class Actor : MonoBehaviour {
 		else if (input.attackUp)
 		{
 			movement.Tackle(5);
-			state = State.Attack;
+			EnterAttack();
 		}
 	}
 
 	void StateWalk()
 	{
+		StartWalkPS();
 		animation.Play("chicken_walk");
 
 		float speed = input.walkDirection.SqrMagnitude();
@@ -150,12 +157,13 @@ public class Actor : MonoBehaviour {
 		else if (input.attackUp && input.TimeSinceAttackDown() <= 0.1f)
 		{
 			movement.Tackle(5);
-			state = State.Attack;
+			EnterAttack();
 		}
 	}
 
 	void EnterCharge()
 	{
+
 		state = State.Charge;
 	}
 
@@ -200,8 +208,14 @@ public class Actor : MonoBehaviour {
 			// float force = Mathf.Lerp(5, 20, chargedTimeNormalized);
 			//Debug.Log(timeCharged);
 			movement.Tackle(force);
-			state = State.Attack;
+			EnterAttack();
 		}
+	}
+
+	void EnterAttack()
+	{
+		StopWalkPS();
+		state = State.Attack;
 	}
 
 	void StateAttack()
@@ -215,6 +229,7 @@ public class Actor : MonoBehaviour {
 
 	void EnterJump()
 	{
+		StopWalkPS();
 		movement.Jump();
 		state = State.Jump;
 	}
@@ -235,6 +250,7 @@ public class Actor : MonoBehaviour {
 
 	public void EnterHurt()
 	{
+		StopWalkPS();
 		hurtSound.Play();
 		animation.Play("chicken_bounce");
 		animation.Blend("chicken_idle", 1, 0.3f);
@@ -247,7 +263,19 @@ public class Actor : MonoBehaviour {
 			state = State.Idle;
 	}
 
-		/* Debug stuff */
+	void StopWalkPS()
+	{
+		var em = walkPS.emission;
+		em.enabled = false;
+	}
+
+	void StartWalkPS()
+	{
+		var em = walkPS.emission;
+		em.enabled = true;
+	}
+
+	/* Debug stuff */
 	void DebugState()
 	{
 		if (debugTextMesh)
@@ -262,4 +290,5 @@ public class Actor : MonoBehaviour {
 		lifeCounterTextMesh.text += GameManager.instance.GetNumLives(id).ToString();
 	}
 
+	
 }
