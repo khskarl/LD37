@@ -13,7 +13,7 @@ public class PanUV : MonoBehaviour {
 	}
 	void Update()
 	{
-		float offset = Mathf.Sin(Time.time * scrollSpeed) * distance;
+		float offset = Time.time * scrollSpeed;
 		rend.material.SetTextureOffset("_MainTex", new Vector2(0, -offset));
 	}
 }
